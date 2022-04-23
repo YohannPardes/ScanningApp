@@ -4,6 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import pytesseract
 from PIL.Image import open as PIL_open
 from os import getcwd
+import os
 
 class MyMainWindow(Ui_MainWindow):
 
@@ -19,23 +20,34 @@ class MyMainWindow(Ui_MainWindow):
           self.languages = [("English", "eng"), ("French", "fra"), ("Hebrew", "heb")]
           self.langCombo.addItems(leng[0] for leng in self.languages)
 
+          #the deault path when searching a file
+          dir_path = r"~\OneDrive\pictures"
+          if os.path.exists(dir_path):
+               self.default_path = img_folder_path
+
+          else:
+               dir_path = r"~/Desktop"
+
+          self.default_path = os.path.expanduser(dir_path)
+
      def press_pick_a_file(self, *args):
           #initializing a pick a file widget
           filename = QtWidgets.QFileDialog()
 
           #picking a file
-          myDir = filename.getOpenFileName(filter = "Images (*.png *.jpg *.jpeg *.xml)")
+           
+          myDir = filename.getOpenFileName(filter = "Images (*.png *.jpg *.jpeg *.xml)", directory = self.default_path)
 
-          #if no file picked don change the directory
+          #if a file is picked
           if myDir[0] != "":
                self.current_img_path = myDir[0]
 
-          # setting the pixmap of the main label to the choosen image path
-          mixmap = QtGui.QPixmap(self.current_img_path)
-          # new_pixmap = my_label.pixmap()
-          scaled_mixmap = mixmap.scaled(460, 647, QtCore.Qt.KeepAspectRatio)
+               # setting the pixmap of the main label to the choosen image path
+               mixmap = QtGui.QPixmap(self.current_img_path)
+               # new_pixmap = my_label.pixmap()
+               scaled_mixmap = mixmap.scaled(460, 647, QtCore.Qt.KeepAspectRatio)
 
-          self.choosenImgLabel.setPixmap(scaled_mixmap)
+               self.choosenImgLabel.setPixmap(scaled_mixmap)
 
      def do_ocr(self, *args):
 
