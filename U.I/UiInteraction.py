@@ -23,7 +23,7 @@ class MyMainWindow(Ui_MainWindow):
           #the deault path when searching a file
           dir_path = r"~\OneDrive\pictures"
           if os.path.exists(dir_path):
-               self.default_path = img_folder_path
+               pass
 
           else:
                dir_path = r"~/Desktop"
