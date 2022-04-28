@@ -4,7 +4,6 @@ import os, pytesseract
 from PIL.Image import open as PIL_open
 from OcrProcessingClass import OcrResult
 
-
 class _Label(QtWidgets.QLabel):
 
      def __init__(self):
@@ -71,11 +70,21 @@ class _Label(QtWidgets.QLabel):
      def constraint_rectangle(self, x1, y1, x2, y2):
           """function that make sure the drawn rectangle is not outside the picture"""
           
-          # contraining the value to the size of the pixmap
-          p1 = QtCore.QPoint(max(0, min(x1, self.width()-1)), max(0, min(y1, self.height()-1)))
-          p2 = QtCore.QPoint(max(0, min(x2, self.width()-1)), max(0, min(y2, self.height()-1)))
+          # constraining the values between 0 - size_of_the_label
+          x1, y1 = max(0, min(x1, self.width()-1)), max(0, min(y1, self.height()-1))
+          x2, y2 = max(0, min(x2, self.width()-1)), max(0, min(y2, self.height()-1))
+          
+          #getting the width and height of the rectangle
+          w, h = abs(x1 - x2), abs(y1 - y2)
+          size = QtCore.QSize(w, h)
 
-          return QtCore.QRect(p1, p2)
+          # top left point
+          x1 = min(x1, x2)
+          y1 = min(y1, y2)
+
+          p1 = QtCore.QPoint(x1, y1)
+
+          return QtCore.QRect(p1, size)
 
      def reset(self):
           self.temporary_rectangle = None
@@ -167,7 +176,10 @@ class CustomWidget(QtWidgets.QWidget):
                self.img_label.setGeometry(QtCore.QRect(self.img_label.pos(), self.img_label.pixmap().size()))
                self.img_label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-     def do_ocr(self, *args):
+               #outputing the ocr with the default language currently english
+               self.do_ocr()
+
+     def do_ocr(self):
 
           # setting the cmd path to the tesseract .exe
           pytesseract.pytesseract.tesseract_cmd = os.path.expanduser(r"~\AppData\Local\Programs\Tesseract-OCR\tesseract.exe")
@@ -196,24 +208,29 @@ class CustomWidget(QtWidgets.QWidget):
 
                self.ocr_label.setText("""No image has been selected, please pick a file with the 'Pick a file button'""")
 
+          except OSError:
+
+               self.ocr_label.setText("""The choosen file is not of a supported format, please pick another file""")
+
      def show_rect(self):
 
           key = self.words_combo.currentText()
-          x1, y1, x2, y2 = self.word_dict[key].box
+          if key and key != "":
+               x1, y1, x2, y2 = self.word_dict[key].box
 
-          shrink_ratio = self.scaled_pixmap.height()/self.original_img_height
-          y_offset = self.img_label.height()/2 - self.scaled_pixmap.height()/2
-          x_offset = self.img_label.width()/2 - self.scaled_pixmap.width()/2
+               shrink_ratio = self.scaled_pixmap.height()/self.original_img_height
+               y_offset = self.img_label.height()/2 - self.scaled_pixmap.height()/2
+               x_offset = self.img_label.width()/2 - self.scaled_pixmap.width()/2
 
-          x1 = int(x1 * shrink_ratio - 2 + x_offset)
-          y1 = int(y1 * shrink_ratio - 2 + y_offset)
-          x2 = int(x2 * shrink_ratio + 1 + x_offset)
-          y2 = int(y2 * shrink_ratio + 1 + y_offset)
+               x1 = int(x1 * shrink_ratio - 2 + x_offset)
+               y1 = int(y1 * shrink_ratio - 2 + y_offset)
+               x2 = int(x2 * shrink_ratio + 1 + x_offset)
+               y2 = int(y2 * shrink_ratio + 1 + y_offset)
 
-          rect = QtCore.QRect(QtCore.QPoint(x1, y1), QtCore.QPoint(x2, y2))
+               rect = QtCore.QRect(QtCore.QPoint(x1, y1), QtCore.QPoint(x2, y2))
 
-          self.img_label.my_rectangles.append(rect)
-          self.img_label.repaint()
+               self.img_label.my_rectangles.append(rect)
+               self.img_label.repaint()
 
 if __name__ == "__main__":
      app = QtWidgets.QApplication([])
